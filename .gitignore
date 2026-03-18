@@ -1,0 +1,31 @@
+# === CREDENZIALI E SEGRETI ===
+.env
+.zeroclaw/workspace/.secret_key
+.zeroclaw/workspace/daemon_state.json
+
+# === MODELLI AI (troppo grandi per git) ===
+*.onnx
+*.onnx.json
+
+# === LOG E DATI RUNTIME ===
+logs/
+*.log
+audit.log
+syscall-anomalies.log
+jarvis_test.wav
+
+# === AMBIENTE PYTHON ===
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# === AUDIO TEMPORANEI ===
+temp_audio.wav
+
+# === ZEROCLAW STATE ===
+.zeroclaw/workspace/state/
+.zeroclaw/workspace/workspace/
