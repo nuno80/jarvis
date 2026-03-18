@@ -184,7 +184,11 @@ agent = create_agent(
 3. Esporta `TOOLS = [la_tua_funzione]`
 4. Riavvia il bridge → auto-scoperto, zero modifiche a `jarvis_agent.py`
 
-**Test auto-discovery:** Attualmente ci sono 7 tool registrati (1 custom da `tools/` + 6 built-in zeroclaw).
+**Test auto-discovery:** Attualmente ci sono 8 tool registrati (2 custom da `tools/` + 6 built-in zeroclaw).
+
+**Tool custom disponibili:**
+- `cerca_voli_completo` — ricerca voli con cache automatica (TTL 4h, salvata in `data/travel_cache/`)
+- `consulta_ricerche_voli` — legge i risultati dalla cache senza chiamare API
 
 > [!NOTE]
 > I file `tool_email.py`, `tool_homeassistant.py` ecc. attualmente sono CLI (argparse). Quando vuoi, puoi aggiungere i wrapper `@tool` + `TOOLS = [...]` a ciascuno così JARVIS li potrà usare anche vocalmente.
