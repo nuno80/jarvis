@@ -1,76 +1,50 @@
-# 📖 ZEROCLAW REFERENCE & ARCHITETTURA PROGETTO JARVIS
+# 📖 ZEROCLAW & JARVIS: ARCHITETTURA E REFERENCE (CORE)
 
-**Core Engine:** Rust / 100% Locale (<5MB RAM, Cold Start <10ms)
-**Orchestrazione:** Ollama (Qwen 9B). Assicurati di settare il config di zeroclaw inserendo :
+Questa è la guida architetturale principale sul motore ZeroClaw e sul modo in cui interagisce nativamente con l'ambiente JARVIS e Windows/WSL2.
+
+## 1. ZeroClaw - I Principi del Sistema
+ZeroClaw non è un semplice "chatbot", è un sistema operativo runtime autonomo per i flussi di lavoro agentici. È costruito al 100% in **Rust** seguendo rigide performance ed efficienze:
+* **Zero Overhead**: Richiede < 5MB di RAM e ha un Cold Start < 10ms.
+* **Architettura a Trait**: È basato su un design completamente modulare. Provider, Canali, Tool (azioni), Memoria e Tunnels sono "plug & play", descritti da trait di programmazione (es: `src/providers/traits.rs` / `src/channels/traits.rs` in sorgente).
+* **Cross-Hardware**: Può girare persino su board periferiche come Raspberry e chip ARM poveri, massimizzando le performance sulla macchina WSL2 ospite.
+
+## 2. Configurazione Ottimizzata per JARVIS (Server WSL2 + Client Ollama Windows)
+JARVIS utilizza ZeroClaw installato sotto sottosistema WSL2 (Debian) che invoca dinamicamente i modelli ospitati nell'istanza di Windows (che gestisce l'hardware della GPU, es. RTX 5070).
+
+### Ollama Endpoint nel `config.toml`
+Essendo Ollama in esecuzione su host Windows (accessibile via network bridging), il file `~/.zeroclaw/config.toml` DEVE puntare all'indirizzo WSL Gateway:
 ```toml
 default_provider = "ollama"
-default_model = "qwen3.5:9b"
-api_url = "http://172.20.80.1:11434"
+default_model = "qwen3.5:9b"  # Oppure "qwen2.5-coder:32b" e altri
+api_url = "http://172.20.80.1:11434" # Usa l'IP di bridge WSL2 di localhost host se necessario, o localhost 0.0.0.0 in Windows.
 ```
 
-## 1. Architettura del Sistema (WSL2 + Windows)
-ZeroClaw è un'infrastruttura a tre livelli:
-* **Ollama (Cervello):** Gira su Windows per sfruttare la GPU (RTX 5070).
-* **ZeroClaw Daemon (Cuore):** Gestisce memoria, scheduler e gateway all'interno di WSL.
-* **ZeroClaw Agent (Azione):** L'interfaccia CLI/Bridge Audio per interagire con l'IA.
+**Permessi in Windows:**
+Affinchè WSL veda Ollama, nelle Variabili D'ambiente Windows inserire:
+`OLLAMA_HOST=0.0.0.0`
+E riavviare il servizio Ollama. Verificabile in WSL con `curl http://172.20.80.1:11434` o gli IP designati dal `resolve.conf`.
 
-### Workspace (I File dell'Anima)
-L'agente risiede in `.zeroclaw/workspace/`:
-* `config.toml`: Routing LLM, porte, API keys e dichiarazione Tool/Sub-Agenti.
-* `SOUL.md`: Il prompt di sistema principale (Personalità e direttive di Jarvis).
-* `AGENTS.md`: Routing dei sub-agenti e spiegazione semantica dei tool.
+## 3. Gestione Sicurezza (Sandboxing e Permessi)
+ZeroClaw ha la libertà di agire sulla macchina as-is, dipendendo e operando sull'ecosistema permissivo del demone:
 
-## 2. Configurazione Ollama (Modello Locale)
-Per far comunicare ZeroClaw (WSL) con Ollama (Windows):
-1. **Verifica connessione:** `curl http://localhost:11434`
-2. **Accesso Esterno:** Se non risponde da WSL, imposta `OLLAMA_HOST=0.0.0.0` nelle variabili d'ambiente di Windows per permettere connessioni da WSL.
-3. **Modello:** Assicurati di aver scaricato il modello: `ollama pull qwen3.5:9b`.
+* A differenza di framework isolati, i tool nativi scritti in shell o bash da JARVIS lavorano a **Livello OS Utente**. 
+* **Controllo Autonomia**: Sotto `[autonomy]` del `config.toml`, limitare `allowed_commands` ad un array esplicito come `["python", "node", "git", "bash"]` protegge da escalation arbitrarie sui comandi core del terminale. C'è anche l'Emergency Stop (`estop`).
+* **Protezione Dati Sensibili (`estop`)**: Il controllo E-Stop isola l'agente o disabilita tool temporanei senza spegnerlo (es. `zeroclaw estop --level network-kill`). 
 
-## 3. Gestione Gateway e Pairing
-ZeroClaw SOLO PER LA SUA PRIMA ESECUZIONE richiede autorizzazione per sicurezza:
-1. **Generare Codice:** `zeroclaw gateway --new-pairing` (uccidere eventuali demoni attivi prima).
-2. **Dashboard Web:** Accedi a `http://127.0.0.1:42617` e inserisci il codice a 6 cifre fornito dal terminale.
-3. Quando devi rifare il pairing?
-  Dovrai usare di nuovo il comando --new-pairing solo se:
-  * Cambi browser o dispositivo e vuoi aggiungerne uno nuovo.
-  * Cancelli manualmente la cartella della configurazione (~/.zeroclaw).
-  * Sospetti una violazione della sicurezza e vuoi revocare l'accesso a tutti i dispositivi precedentemente collegati.
+## 4. Gestione Memoria (Hybrid RAG Vector/SQLite)
+A differenza dei normali script agentici che si perdono token rapidamente, la `Memory` di ZeroClaw implementa un framework a due layer:
+1. **Breve Termine (Session Context & Rolling Summary):** Aggregando dinamicamente il contenuto nei messaggi sistema, per default le ultime 50 conversazioni con una rielaborazione intelligente in caso scatti overflow context token.
+2. **Lungo Termine (SQLite Vettoriale + FTS5):** Qualsiasi file di progetto salvato o tool invocato scrive in locale stringhe vettorializzate. Le ricerche future `memory_store` o query RAG fondono match semantici "Keyword Weight" a "Vector Weight" (Default nel config: 30% Keyword, 70% Vettori) offrendo altissima predizione anche via embedder locali.
 
-## 4. Memoria e Dati
-* **Ricerca Ibrida:** SQLite con Vettoriale + FTS5.
-* **Breve termine:** Rolling Summary (max 500 token).
-* **Lungo termine:** Query vettoriali silenti sul database locale.
+## 5. Directory dell'Anima (`.zeroclaw/workspace`)
+Il Workspace definisce come l'Agente e i Tool interagiscono:
+* `config.toml`: Cuore di rotte, API keys, limiti, setup dei Canali.
+* `SOUL.md`: Il prompt di sistema "master", la direttiva personale di JARVIS primordiale per quel singolo runtime.
+* `AGENTS.md` o File di De-Delegazione: Configura istruzioni di workflow aggiuntive.
+* Directory `skills/` : Contiene `.md` referenzianti i tool esterni sviluppati come script.
 
-## 5. Gestione Servizio e Daemons (Troubleshooting)
-### Comandi di Servizio
-`zeroclaw service install / start / stop / status`
+Per integrare nuovi skill e tool, consulta [ZeroClaw Tools (zeroclaw_tools.md)](./zeroclaw_tools.md).
 
-### Risoluzione Errori Comuni
-* **Errore: Address already in use (os error 98):** Un processo zombie tiene occupata la porta 42617.
-  * *Identifica:* `sudo ss -tulpn | grep 42617`
-  * *Pulisci:* `ps aux | grep zeroclaw | grep -v grep | awk '{print $2}' | xargs -r kill --9`
-* **Errore: heartbeat stale / scheduler unhealthy:** Il `zeroclaw daemon` non è attivo o non risponde. Esegui `zeroclaw doctor` per diagnosi.
-
-## 6. Sicurezza (Sandboxing Critico)
-ZeroClaw eredita i permessi dell'utente. È **tassativo**:
-1. Configurare `allowed_commands` in `config.toml` (es. `["python.exe", "git"]`).
-2. Limitare il File Manager a directory specifiche (es. `C:\Users\Nome\Desktop\Jarvis_Drop`).
-3. Mantenere l'Human-in-the-Loop per azioni critiche.
-
-## 7. Comandi Operativi Rapidi
-| Azione | Comando |
-| :--- | :--- |
-| Check salute | `zeroclaw doctor` |
-| Avvio Demone | `zeroclaw daemon` |
-| Chat Interattiva | `zeroclaw agent` |
-| Comando Diretto | `zeroclaw agent -m "fai X..."` |
-| Onboarding | `zeroclaw onboard` |
-
-## 8. Test di Verifica (Turing Test)
-Chiedi a Jarvis: *"Crea un file test.py, scrivi uno script che analizzi il sistema e lo spazio disco, eseguilo e dimmi il risultato."*
-Se Jarvis risponde con la sua personalità tipica (es. sarcasmo), l'integrazione Memoria + Shel  l è operativa.
-
-## reference link:
-https://www.zeroclawlabs.ai/docs
-
----
+## Reference Ufficiale
+* OpenSource Repository: https://github.com/zeroclaw-labs/zeroclaw
+* ZeroClaw Ufficial WebSite: https://zeroclawlabs.ai

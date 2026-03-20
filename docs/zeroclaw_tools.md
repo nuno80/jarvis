@@ -31,9 +31,10 @@ Lo script deve avere tre caratteristiche fondamentali per lavorare bene con un L
 
 1. **Gestione degli argomenti CLI**: Usa `argparse` o simili per ricevere input puliti dalla shell.
 2. **Formattazione Output LLM-Friendly**: L'output deve essere facilmente interpretabile dal modello. Formati come tabelle Markdown, liste formattate o piccoli JSON sono ideali.
-3. **Protezione contro l'Overflow di Contesto**: I file possono essere enormi (es. Excel con 100k righe). L'LLM crasherà o perderà il contesto se riceve tutto. Lo script DEVE testare la dimensione dell'output o forzare una paginazione/limite di righe rigido (es. limitare sempre l'output a max 50KB o 100 righe di default).
+3. **Protezione contro l'Overflow di Contesto**: I file possono essere enormi (es. Excel con 100k righe o centinaia di email). L'LLM crasherà o perderà il contesto se riceve tutto. Lo script DEVE testare la dimensione dell'output o forzare una paginazione/limite di righe rigido (es. limitare sempre l'output a max 50KB o 100 righe di default).
+4. **Segretezza delle API Key/Password**: Se lo script richiede credenziali (come le App Password per l'IMAP), usa la libreria `dotenv` per pescarle dal file `.env` ed evita a tutti i costi l'hardcoding nello script.
 
-*Esempio: L'`excel_reader.py` espone flag come `--max-rows`, `--range A1:B10` e un limite hardcoded di 50_000 byte per sicurezza.*
+*Esempio: L'`excel_reader.py` espone flag `--max-rows`, mentre `email_reader.py` limite l'estrazione a `--limit 5` e tronca i testi oltre i 1000 caratteri per sicurezza.*
 
 ### Step 2: Insegnare all'Agente ad usarlo (La Skill)
 
@@ -89,3 +90,4 @@ Testa rigorosamente lo script in WSL usando esattamente lo stesso runtime/enviro
 | Nome Tool | Script Backend | Descrizione | Path Skill |
 |-----------|----------------|-------------|------------|
 | **excel_reader** | `excel_reader.py` | Estrae e formatta dati da `.xlsx/.xls` con supporto a selezione foglio e range. Output in MD, CSV, JSON. | `skills/excel-reader/SKILL.md` |
+| **email_reader** | `email_reader.py` | Legge email da account IMAP (Gmail e Yahoo). Supporta filtri per mail "non lette" e limiti numerici. | `skills/email-reader/SKILL.md` |
