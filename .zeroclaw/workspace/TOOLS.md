@@ -34,13 +34,13 @@ Things like:
 
 - **email_reader** — Leggi le email da Gmail e Yahoo
   - Use when: L'utente vuole leggere o riassumere le ultime email ricevute (Gmail/Yahoo).
-  - How: `python3 ~/.zeroclaw/workspace/email_reader.py --provider [gmail|yahoo] [--limit N] [--unread]`
+  - How: `python3 ~/.zeroclaw/workspace/tools/email_reader.py --provider [gmail|yahoo] [--limit N] [--unread]`
   - Skill: `skills/email-reader/SKILL.md` per dettagli completi.
   - Don't use when: Non sono state fornite App Passwords o l'utente non lo chiede esplicitamente.
 
 - **excel_reader** — Leggi e analizza file Excel (.xlsx/.xls)
   - Use when: l'utente chiede di leggere dati da file Excel, tabelle, quotazioni.
-  - How: `python3 ~/.zeroclaw/workspace/excel_reader.py <file> [--sheet NOME] [--range A1:D10] [--format markdown|csv|json]`
+  - How: `python3 ~/.zeroclaw/workspace/tools/excel_reader.py <file> [--sheet NOME] [--range A1:D10] [--format markdown|csv|json]`
   - Skill: `skills/excel-reader/SKILL.md` per dettagli completi.
   - Don't use when: il file non è Excel (usa `file_read` per testo).
 
