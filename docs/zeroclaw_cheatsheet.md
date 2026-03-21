@@ -10,8 +10,9 @@ Un riferimento rapido per te. Usa questi comandi dal terminale WSL (o Windows, o
 | `zeroclaw status` | Mostra se il demone è attivo, quale provider/modello stai usando, l'uso della memoria e i parametri base. |
 | `zeroclaw doctor` | Lancia una diagnostica. Fondamentale per capire se c'è un errore di sintassi nel file `config.toml` o se Ollama è irraggiungibile. |
 | `zeroclaw agent` | Apre la chat interattiva (Terminale) diretta con JARVIS. Ottimo per testare le API prima di lanciare i canali. |
-| `jarvis-restart` | Applica le modifiche fatte a `config.toml` o `SOUL.md` riavviando rapidamente il servizio. |
-| `jarvis-stop` | Spegne il demone JARVIS. |
+| `jarvis-start` | **Alias ZSH** (modificabile in `~/.zshrc`). Si sposta nella cartella `jarvis_local` di Windows, carica automaticamente tutte le variabili dal file `~/.zeroclaw/.env` in memoria, e avvia il demone ZeroClaw. |
+| `jarvis-restart` | **Alias ZSH** (modificabile in `~/.zshrc`). Lancia in sequenza l'arresto e il riavvio rapido del servizio (utile per applicare modifiche a `config.toml`, `.env` o `SOUL.md`). |
+| `jarvis-stop` | **Alias ZSH** (modificabile in `~/.zshrc`). Chiama fisicamente l'eseguibile interno per arrestare in sicurezza il demone ZeroClaw (`zeroclaw service stop`). |
 
 ## 🔑 Sicurezza e Autenticazione (WSL)
 

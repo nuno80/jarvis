@@ -1,0 +1,456 @@
+--- config_copia2.toml
++++ config.toml
+@@ -1,6 +1,5 @@
+-api_url = "http://172.20.80.1:11434"
+-default_provider = "ollama"
+-default_model = "qwen3.5:9b"
++default_provider = "openrouter"
++default_model = "stepfun/step-3.5-flash:free"
+ default_temperature = 0.7
+ provider_timeout_secs = 120
+ model_routes = []
+@@ -8,7 +7,7 @@
+ 
+ [model_providers]
+ 
+-[provider]
++[extra_headers]
+ 
+ [observability]
+ backend = "none"
+@@ -33,7 +32,8 @@
+     "head",
+     "tail",
+     "date",
+-    "python3",
++    "python",                 
++    "python3",              
+     "bash",
+ ]
+ forbidden_paths = [
+@@ -64,12 +64,11 @@
+ auto_approve = [
+     "file_read",
+     "memory_recall",
++    "shell",
+ ]
+ always_ask = []
+ allowed_roots = []
+ non_cli_excluded_tools = []
+-non_cli_approval_approvers = []
+-non_cli_natural_language_approval_mode = "direct"
+ 
+ [security.sandbox]
+ backend = "auto"
+@@ -108,75 +107,6 @@
+ state_file = "~/.zeroclaw/estop-state.json"
+ require_otp_to_resume = true
+ 
+-[security.syscall_anomaly]
+-enabled = true
+-strict_mode = false
+-alert_on_unknown_syscall = true
+-max_denied_events_per_minute = 5
+-max_total_events_per_minute = 120
+-max_alerts_per_minute = 30
+-alert_cooldown_secs = 20
+-log_path = "syscall-anomalies.log"
+-baseline_syscalls = [
+-    "read",
+-    "write",
+-    "open",
+-    "openat",
+-    "close",
+-    "stat",
+-    "fstat",
+-    "newfstatat",
+-    "lseek",
+-    "mmap",
+-    "mprotect",
+-    "munmap",
+-    "brk",
+-    "rt_sigaction",
+-    "rt_sigprocmask",
+-    "ioctl",
+-    "fcntl",
+-    "access",
+-    "pipe2",
+-    "dup",
+-    "dup2",
+-    "dup3",
+-    "epoll_create1",
+-    "epoll_ctl",
+-    "epoll_wait",
+-    "poll",
+-    "ppoll",
+-    "select",
+-    "futex",
+-    "clock_gettime",
+-    "nanosleep",
+-    "getpid",
+-    "gettid",
+-    "set_tid_address",
+-    "set_robust_list",
+-    "clone",
+-    "clone3",
+-    "fork",
+-    "execve",
+-    "wait4",
+-    "exit",
+-    "exit_group",
+-    "socket",
+-    "connect",
+-    "accept",
+-    "accept4",
+-    "listen",
+-    "sendto",
+-    "recvfrom",
+-    "sendmsg",
+-    "recvmsg",
+-    "getsockname",
+-    "getpeername",
+-    "setsockopt",
+-    "getsockopt",
+-    "getrandom",
+-    "statx",
+-]
+-
+ [security.nevis]
+ enabled = false
+ instance_url = ""
+@@ -243,7 +173,6 @@
+ 
+ [runtime]
+ kind = "native"
+-reasoning_enabled = false
+ 
+ [runtime.docker]
+ image = "alpine:3.20"
+@@ -253,41 +182,6 @@
+ read_only_rootfs = true
+ mount_workspace = true
+ allowed_workspace_roots = []
+-
+-[runtime.wasm]
+-tools_dir = "tools/wasm"
+-fuel_limit = 1000000
+-memory_limit_mb = 64
+-max_module_size_mb = 50
+-allow_workspace_read = false
+-allow_workspace_write = false
+-allowed_hosts = []
+-
+-[runtime.wasm.security]
+-require_workspace_relative_tools_dir = true
+-reject_symlink_modules = true
+-reject_symlink_tools_dir = true
+-strict_host_validation = true
+-capability_escalation_mode = "deny"
+-module_hash_policy = "warn"
+-
+-[runtime.wasm.security.module_sha256]
+-
+-[research]
+-enabled = false
+-trigger = "never"
+-keywords = [
+-    "find",
+-    "search",
+-    "check",
+-    "investigate",
+-    "look",
+-    "research",
+-]
+-min_message_length = 50
+-max_iterations = 5
+-show_progress = true
+-system_prompt_prefix = ""
+ 
+ [reliability]
+ provider_retries = 2
+@@ -325,45 +219,9 @@
+ max_skills = 500
+ similarity_threshold = 0.85
+ 
+-[[model_routes]]
+-hint = "fast"
+-provider = "ollama"
+-model = "qwen3.5:9b"
+-
+-[[model_routes]]
+-hint = "reasoning"
+-provider = "google"
+-model = "gemini-pro-3.1"
+-
+ [query_classification]
+-enabled = true
+-
+-[[query_classification.rules]]
+-hint = "reasoning"
+-keywords = [
+-    "pianifica",
+-    "architettura",
+-    "algoritmo complesso",
+-    "framework",
+-    "struttura",
+-]
+-patterns = []
+-min_length = 250
+-priority = 10
+-
+-[[query_classification.rules]]
+-hint = "fast"
+-keywords = [
+-    "spiega",
+-    "analizza",
+-    "perché",
+-    "cerca",
+-    "riassumi",
+-    "codice",
+-    "meteo",
+-]
+-patterns = []
+-priority = 5
++enabled = false
++rules = []
+ 
+ [heartbeat]
+ enabled = false
+@@ -378,12 +236,6 @@
+ [cron]
+ enabled = true
+ max_run_history = 50
+-
+-[goal_loop]
+-enabled = false
+-interval_minutes = 10
+-step_timeout_secs = 120
+-max_steps_per_cycle = 3
+ 
+ [channels_config]
+ cli = true
+@@ -409,8 +261,8 @@
+ archive_after_days = 7
+ purge_after_days = 30
+ conversation_retention_days = 30
+-embedding_provider = "ollama"
+-embedding_model = "nomic-embed-text"
++embedding_provider = "none"
++embedding_model = "text-embedding-3-small"
+ embedding_dimensions = 1536
+ vector_weight = 0.7
+ keyword_weight = 0.3
+@@ -420,6 +272,7 @@
+ response_cache_enabled = false
+ response_cache_ttl_minutes = 60
+ response_cache_max_entries = 5000
++response_cache_hot_entries = 256
+ snapshot_enabled = false
+ snapshot_on_hygiene = false
+ auto_hydrate = true
+@@ -431,28 +284,25 @@
+ provider = ""
+ schema = "public"
+ table = "memories"
+-tls = false
+ 
+ [tunnel]
+ provider = "none"
+ 
+ [gateway]
+ port = 42617
+-host = "0.0.0.0"
+-# host = "127.0.0.1"
++host = "127.0.0.1"
++# per ollama serve -->  host = "0.0.0.0"
+ require_pairing = true
+-allow_public_bind = true # <- MODIFICATO QUI DA FALSE A TRUE
+-paired_tokens = ["enc2:2130a17adc083cfe28a08ccef54a8c83943dacb65979575e938e67852e5d53e29a93a1d44f6eafbb16149514efb56a852953894eac4a3d07254e7ba82a76a0e81bcc83d11aa3c11880d9387cefa357567f0a71dd863098352980e91f"]
++allow_public_bind = true
++paired_tokens = []
+ pair_rate_limit_per_minute = 10
+ webhook_rate_limit_per_minute = 60
+ trust_forwarded_headers = false
+ rate_limit_max_keys = 10000
+ idempotency_ttl_secs = 300
+ idempotency_max_keys = 10000
+-
+-[gateway.node_control]
+-enabled = false
+-allowed_node_ids = []
++session_persistence = true
++session_ttl_hours = 0
+ 
+ [gateway.pairing_dashboard]
+ code_length = 8
+@@ -477,7 +327,6 @@
+ [browser]
+ enabled = false
+ allowed_domains = []
+-browser_open = "default"
+ backend = "agent_browser"
+ native_headless = true
+ native_webdriver_url = "http://127.0.0.1:9515"
+@@ -501,7 +350,7 @@
+ allowed_domains = []
+ max_response_size = 1000000
+ timeout_secs = 30
+-user_agent = "ZeroClaw/1.0"
++allow_private_hosts = false
+ 
+ [multimodal]
+ max_images = 4
+@@ -509,20 +358,17 @@
+ allow_remote_fetch = false
+ 
+ [web_fetch]
+-enabled = true
+-provider = "fast_html2md"
++enabled = false
+ allowed_domains = ["*"]
+ blocked_domains = []
+ max_response_size = 500000
+ timeout_secs = 30
+-user_agent = "ZeroClaw/1.0"
+ 
+ [web_search]
+-enabled = true
++enabled = false
+ provider = "duckduckgo"
+-max_results = 3
++max_results = 5
+ timeout_secs = 15
+-user_agent = "ZeroClaw/1.0"
+ 
+ [project_intel]
+ enabled = false
+@@ -555,71 +401,62 @@
+ warn_at_percent = 80
+ allow_override = false
+ 
++[cost.prices."google/gemini-1.5-pro"]
++input = 1.25
++output = 5.0
++
++[cost.prices."anthropic/claude-sonnet-4-20250514"]
++input = 3.0
++output = 15.0
++
++[cost.prices."anthropic/claude-3.5-sonnet"]
++input = 3.0
++output = 15.0
++
++[cost.prices."google/gemini-2.0-flash"]
++input = 0.1
++output = 0.4
++
++[cost.prices."openai/o1-preview"]
++input = 15.0
++output = 60.0
++
++[cost.prices."anthropic/claude-3-haiku"]
++input = 0.25
++output = 1.25
++
++[cost.prices."anthropic/claude-opus-4-20250514"]
++input = 15.0
++output = 75.0
++
++[cost.prices."openai/gpt-4o"]
++input = 5.0
++output = 15.0
++
+ [cost.prices."openai/gpt-4o-mini"]
+ input = 0.15
+ output = 0.6
+ 
+-[cost.prices."anthropic/claude-3.5-sonnet"]
+-input = 3.0
+-output = 15.0
+-
+-[cost.prices."anthropic/claude-sonnet-4-20250514"]
+-input = 3.0
+-output = 15.0
+-
+-[cost.prices."google/gemini-2.0-flash"]
+-input = 0.1
+-output = 0.4
+-
+-[cost.prices."anthropic/claude-opus-4-20250514"]
+-input = 15.0
+-output = 75.0
+-
+-[cost.prices."google/gemini-1.5-pro"]
+-input = 1.25
+-output = 5.0
+-
+-[cost.prices."openai/o1-preview"]
+-input = 15.0
+-output = 60.0
+-
+-[cost.prices."anthropic/claude-3-haiku"]
+-input = 0.25
+-output = 1.25
+-
+-[cost.prices."openai/gpt-4o"]
+-input = 5.0
+-output = 15.0
+-
+ [peripherals]
+ enabled = false
+ boards = []
+ 
+-[agents.researcher]
+-provider = "ollama"
+-model = "qwen3.5:9b"
+-system_prompt = "Sei un ricercatore esperto. Usa i tool web_search e web_fetch per trovare informazioni e restituisci un riassunto conciso."
+-max_depth = 3
+-agentic = true
+-allowed_tools = [
+-    "web_search",
+-    "web_fetch",
+-]
+-max_iterations = 10
+-
+-[coordination]
+-enabled = true
+-lead_agent = "delegate-lead"
+-max_inbox_messages_per_agent = 256
+-max_dead_letters = 256
+-max_context_entries = 512
+-max_seen_message_ids = 4096
++[agents]
++
++[swarms]
+ 
+ [hooks]
+ enabled = true
+ 
+ [hooks.builtin]
+ command_logger = false
++
++[hooks.builtin.webhook_audit]
++enabled = false
++url = ""
++tool_patterns = []
++include_args = false
++max_args_bytes = 4096
+ 
+ [hardware]
+ enabled = false
+@@ -629,14 +466,10 @@
+ 
+ [transcription]
+ enabled = false
++default_provider = "groq"
+ api_url = "https://api.groq.com/openai/v1/audio/transcriptions"
+ model = "whisper-large-v3-turbo"
+ max_duration_secs = 120
+-
+-[agents_ipc]
+-enabled = false
+-db_path = "~/.zeroclaw/agents.db"
+-staleness_secs = 300
+ 
+ [tts]
+ enabled = false

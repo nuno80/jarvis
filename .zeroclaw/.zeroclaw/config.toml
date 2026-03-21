@@ -1,47 +1,12 @@
-﻿# default_provider = "openrouter"
-# default_model = "stepfun/step-3.5-flash:free"
-# default_temperature = 0.7
-# model_routes = []
-# embedding_routes = []
-
-# default_provider = "ollama"
-# default_model = "qwen3.5:9b"
-# api_url = "http://172.20.80.1:11434"
-# default_temperature = 0.7
-# model_routes = []
-# embedding_routes = []
-
-default_provider = "ollama"
-default_model = "kimi-k2.5:cloud"
-api_url = "https://ollama.com"
+default_provider = "openrouter"
+default_model = "anthropic/claude-sonnet-4.6"
 default_temperature = 0.7
 model_routes = []
 embedding_routes = []
 
-# default_provider = "openai"
-# default_model = "moonshotai/kimi-k2.5"
-# api_url = "https://integrate.api.nvidia.com/v1"
-# default_temperature = 0.7
-# model_routes = []
-# embedding_routes = []
-
-[gateway]
-port = 42617
-host = "0.0.0.0"
-# per API esterne serve --> host = "127.0.0.1"
-# per ollama serve -->  host = "0.0.0.0"
-require_pairing = true
-allow_public_bind = true
-paired_tokens = []
-pair_rate_limit_per_minute = 10
-webhook_rate_limit_per_minute = 60
-trust_forwarded_headers = false
-rate_limit_max_keys = 10000
-idempotency_ttl_secs = 300
-idempotency_max_keys = 10000
-
-
 [model_providers]
+
+[provider]
 
 [observability]
 backend = "none"
@@ -66,9 +31,6 @@ allowed_commands = [
     "head",
     "tail",
     "date",
-    "python",
-    "python3",
-    "bash",
 ]
 forbidden_paths = [
     "/etc",
@@ -98,11 +60,36 @@ shell_env_passthrough = []
 auto_approve = [
     "file_read",
     "memory_recall",
-    "shell",
 ]
 always_ask = []
 allowed_roots = []
-non_cli_excluded_tools = []
+non_cli_excluded_tools = [
+    "shell",
+    "file_write",
+    "file_edit",
+    "git_operations",
+    "browser",
+    "browser_open",
+    "http_request",
+    "schedule",
+    "cron_add",
+    "cron_remove",
+    "cron_update",
+    "cron_run",
+    "memory_store",
+    "memory_forget",
+    "proxy_config",
+    "model_routing_config",
+    "pushover",
+    "composio",
+    "delegate",
+    "screenshot",
+    "image_info",
+]
+non_cli_approval_approvers = []
+non_cli_natural_language_approval_mode = "direct"
+
+[autonomy.non_cli_natural_language_approval_mode_by_channel]
 
 [security.sandbox]
 backend = "auto"
@@ -140,6 +127,75 @@ enabled = false
 state_file = "~/.zeroclaw/estop-state.json"
 require_otp_to_resume = true
 
+[security.syscall_anomaly]
+enabled = true
+strict_mode = false
+alert_on_unknown_syscall = true
+max_denied_events_per_minute = 5
+max_total_events_per_minute = 120
+max_alerts_per_minute = 30
+alert_cooldown_secs = 20
+log_path = "syscall-anomalies.log"
+baseline_syscalls = [
+    "read",
+    "write",
+    "open",
+    "openat",
+    "close",
+    "stat",
+    "fstat",
+    "newfstatat",
+    "lseek",
+    "mmap",
+    "mprotect",
+    "munmap",
+    "brk",
+    "rt_sigaction",
+    "rt_sigprocmask",
+    "ioctl",
+    "fcntl",
+    "access",
+    "pipe2",
+    "dup",
+    "dup2",
+    "dup3",
+    "epoll_create1",
+    "epoll_ctl",
+    "epoll_wait",
+    "poll",
+    "ppoll",
+    "select",
+    "futex",
+    "clock_gettime",
+    "nanosleep",
+    "getpid",
+    "gettid",
+    "set_tid_address",
+    "set_robust_list",
+    "clone",
+    "clone3",
+    "fork",
+    "execve",
+    "wait4",
+    "exit",
+    "exit_group",
+    "socket",
+    "connect",
+    "accept",
+    "accept4",
+    "listen",
+    "sendto",
+    "recvfrom",
+    "sendmsg",
+    "recvmsg",
+    "getsockname",
+    "getpeername",
+    "setsockopt",
+    "getsockopt",
+    "getrandom",
+    "statx",
+]
+
 [runtime]
 kind = "native"
 
@@ -151,6 +207,45 @@ cpu_limit = 1.0
 read_only_rootfs = true
 mount_workspace = true
 allowed_workspace_roots = []
+
+[runtime.wasm]
+tools_dir = "tools/wasm"
+fuel_limit = 1000000
+memory_limit_mb = 64
+max_module_size_mb = 50
+allow_workspace_read = false
+allow_workspace_write = false
+allowed_hosts = []
+
+[runtime.wasm.security]
+require_workspace_relative_tools_dir = true
+reject_symlink_modules = true
+reject_symlink_tools_dir = true
+strict_host_validation = true
+capability_escalation_mode = "deny"
+module_hash_policy = "warn"
+
+[runtime.wasm.security.module_sha256]
+
+[research]
+enabled = false
+trigger = "never"
+keywords = [
+    "find",
+    "search",
+    "check",
+    "investigate",
+    "look",
+    "research",
+    "найди",
+    "проверь",
+    "исследуй",
+    "поищи",
+]
+min_message_length = 50
+max_iterations = 5
+show_progress = true
+system_prompt_prefix = ""
 
 [reliability]
 provider_retries = 2
@@ -171,7 +266,7 @@ max_concurrent = 4
 
 [agent]
 compact_context = false
-max_tool_iterations = 10
+max_tool_iterations = 20
 max_history_messages = 50
 parallel_tools = false
 tool_dispatcher = "auto"
@@ -192,17 +287,15 @@ interval_minutes = 30
 enabled = true
 max_run_history = 50
 
+[goal_loop]
+enabled = false
+interval_minutes = 10
+step_timeout_secs = 120
+max_steps_per_cycle = 3
+
 [channels_config]
 cli = true
 message_timeout_secs = 300
-
-[channels_config.telegram]
-bot_token = "8604991531:AAFtU6YZJNBs5tsd-zi9MAtgvuX3PAFJMgs"
-allowed_users = ["388282337"]
-stream_mode = "off"
-draft_update_interval_ms = 1000
-interrupt_on_new_message = false
-mention_only = false
 
 [memory]
 backend = "sqlite"
@@ -233,9 +326,27 @@ collection = "zeroclaw_memories"
 provider = ""
 schema = "public"
 table = "memories"
+tls = false
 
 [tunnel]
 provider = "none"
+
+[gateway]
+port = 42617
+host = "127.0.0.1"
+require_pairing = true
+allow_public_bind = false
+paired_tokens = []
+pair_rate_limit_per_minute = 10
+webhook_rate_limit_per_minute = 60
+trust_forwarded_headers = false
+rate_limit_max_keys = 10000
+idempotency_ttl_secs = 300
+idempotency_max_keys = 10000
+
+[gateway.node_control]
+enabled = false
+allowed_node_ids = []
 
 [composio]
 enabled = false
@@ -247,6 +358,7 @@ encrypt = true
 [browser]
 enabled = false
 allowed_domains = []
+browser_open = "default"
 backend = "agent_browser"
 native_headless = true
 native_webdriver_url = "http://127.0.0.1:9515"
@@ -262,6 +374,7 @@ enabled = false
 allowed_domains = []
 max_response_size = 1000000
 timeout_secs = 30
+user_agent = "ZeroClaw/1.0"
 
 [multimodal]
 max_images = 4
@@ -269,17 +382,20 @@ max_image_size_mb = 5
 allow_remote_fetch = false
 
 [web_fetch]
-enabled = true
+enabled = false
+provider = "fast_html2md"
 allowed_domains = ["*"]
 blocked_domains = []
 max_response_size = 500000
 timeout_secs = 30
+user_agent = "ZeroClaw/1.0"
 
 [web_search]
-enabled = true
+enabled = false
 provider = "duckduckgo"
 max_results = 5
 timeout_secs = 15
+user_agent = "ZeroClaw/1.0"
 
 [proxy]
 enabled = false
@@ -297,9 +413,9 @@ monthly_limit_usd = 100.0
 warn_at_percent = 80
 allow_override = false
 
-[cost.prices."google/gemini-1.5-pro"]
-input = 1.25
-output = 5.0
+[cost.prices."google/gemini-2.0-flash"]
+input = 0.1
+output = 0.4
 
 [cost.prices."anthropic/claude-sonnet-4-20250514"]
 input = 3.0
@@ -309,35 +425,43 @@ output = 15.0
 input = 3.0
 output = 15.0
 
-[cost.prices."google/gemini-2.0-flash"]
-input = 0.1
-output = 0.4
+[cost.prices."openai/gpt-4o"]
+input = 5.0
+output = 15.0
 
 [cost.prices."openai/o1-preview"]
 input = 15.0
 output = 60.0
 
-[cost.prices."anthropic/claude-3-haiku"]
-input = 0.25
-output = 1.25
-
 [cost.prices."anthropic/claude-opus-4-20250514"]
 input = 15.0
 output = 75.0
 
-[cost.prices."openai/gpt-4o"]
-input = 5.0
-output = 15.0
+[cost.prices."anthropic/claude-3-haiku"]
+input = 0.25
+output = 1.25
 
 [cost.prices."openai/gpt-4o-mini"]
 input = 0.15
 output = 0.6
+
+[cost.prices."google/gemini-1.5-pro"]
+input = 1.25
+output = 5.0
 
 [peripherals]
 enabled = false
 boards = []
 
 [agents]
+
+[coordination]
+enabled = true
+lead_agent = "delegate-lead"
+max_inbox_messages_per_agent = 256
+max_dead_letters = 256
+max_context_entries = 512
+max_seen_message_ids = 4096
 
 [hooks]
 enabled = true
@@ -354,5 +478,10 @@ workspace_datasheets = false
 [transcription]
 enabled = false
 api_url = "https://api.groq.com/openai/v1/audio/transcriptions"
+model = "whisper-large-v3-turbo"
 max_duration_secs = 120
 
+[agents_ipc]
+enabled = false
+db_path = "~/.zeroclaw/agents.db"
+staleness_secs = 300

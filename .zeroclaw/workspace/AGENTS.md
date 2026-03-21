@@ -65,3 +65,20 @@ Keep local notes (SSH hosts, device names, etc.) in `TOOLS.md`.
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules.
+
+---
+
+## 🔍 Regola per le Ricerche Profonde (Deep Research)
+
+Quando l'utente ti chiede una "ricerca profonda", "ricerca approfondita", o usa la parola "deep research":
+**NON DEVI MAI USARE** i tuoi tool interni `web_search_tool` o `web_fetch`.
+
+Sei obbligato a **delegare il compito allo script dedicato**, usando il tuo tool `shell` per eseguire esattamente questo comando nel terminale:
+
+`python3 ~/.zeroclaw/workspace/tools/deep_research.py "la richiesta dell'utente"`
+
+Attendi che lo script finisca di girare (chiamerà Gemini tramite le API), leggi l'output che ti viene stampato nel terminale e presentalo all'utente senza alterarne i dati. Questa regola ha priorità assoluta su tutto il resto.
+
+
+
+

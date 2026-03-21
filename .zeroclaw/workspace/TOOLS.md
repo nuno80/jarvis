@@ -44,5 +44,16 @@ Things like:
   - Skill: `skills/excel-reader/SKILL.md` per dettagli completi.
   - Don't use when: il file non è Excel (usa `file_read` per testo).
 
+- **duckduckgo_search** — Cerca nel Web per fatti e notizie (Gratis)
+  - Use when: l'utente ti chiede di cercare online una cosa non complessa, o per monitoraggio base.
+  - How: `python3 ~/.zeroclaw/workspace/tools/duckduckgo_search.py my cool query keywords`
+  - Skill: `skills/duckduckgo-search/SKILL.md` 
+  - Don't use when: l'utente chiede una ricerca Profonda (per quella usa il tool python `deep_research.py`).
+
+- **deep_research** — Cerca nel Web in modo approfondito usando Gemini 1.5 Pro (Google Grounding)
+  - Use when: L'utente chiede esplicitamente una ricerca profonda, un'analisi geopolitica, o OSINT complessa. Questo script invoca Gemini API.
+  - How: `python3 ~/.zeroclaw/workspace/tools/deep_research.py "la tua richiesta lunga e dettagliata"`
+  - Don't use when: Per ricerche veloci (in quel caso usa `duckduckgo_search.py`).
+
 ---
 *Add whatever helps you do your job. This is your cheat sheet.*
