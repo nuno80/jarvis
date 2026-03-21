@@ -197,7 +197,7 @@ cli = true
 message_timeout_secs = 300
 
 [channels_config.telegram]
-bot_token = "8604991531:AAFtU6YZJNBs5tsd-zi9MAtgvuX3PAFJMgs"
+bot_token = "inserisci_il_tokemn"
 allowed_users = ["388282337"]
 stream_mode = "off"
 draft_update_interval_ms = 1000
